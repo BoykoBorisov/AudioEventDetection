@@ -11,7 +11,7 @@ def is_blacklist_entry(entry):
   return True
 
 def download_file(csv_row):
-  cmd = "ffmpeg -ss {start} -t 10 -i $(youtube-dl -f 'bestaudio' -g \"https://youtube.com/watch?v={id}\") -ar {fs} -- \"{dest}/{id}_{start}.wav\""
+  cmd = "ffmpeg -hide_banner -loglevel error -ss {start} -t 10 -i $(youtube-dl -f 'bestaudio' -g \"https://youtube.com/watch?v={id}\") -ar {fs} -- \"{dest}/{id}_{start}.wav\""
   cmd = cmd.format(
     start = str(csv_row[1].strip().strip(",")), 
     id = csv_row[0].strip(","), 
@@ -20,9 +20,7 @@ def download_file(csv_row):
   subprocess.call(cmd, shell=True)
 
 def download_file_if_not_blacklised(row):
-  if not is_blacklist_entry(row[3].strip("\"").split(",")):
+  if not len(row) > 4 and not is_blacklist_entry(row[3].strip("\"").split(",")):
     path = "{dest}/{id}_{start}.wav".format(start = str(row[1].strip().strip(",")), id = row[0].strip(","), dest = dest)
-    # print(path)
-    # print(exists(path))
     if not exists(path):
       download_file(row)
