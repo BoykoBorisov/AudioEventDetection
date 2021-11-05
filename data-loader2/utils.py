@@ -1,4 +1,5 @@
 import subprocess
+from os.path import exists
 
 blacklist = set(["/m/09x0r", "/m/04rlf"])
 dest = "output"
@@ -16,10 +17,12 @@ def download_file(csv_row):
     id = csv_row[0].strip(","), 
     dest = dest, 
     fs = str(16000))
-  # print(cmd)
-  # subprocess.call("youtube-dl", shell = True)
   subprocess.call(cmd, shell=True)
 
 def download_file_if_not_blacklised(row):
   if not is_blacklist_entry(row[3].strip("\"").split(",")):
-    download_file(row)
+    path = "{dest}/{id}_{start}.wav".format(start = str(row[1].strip().strip(",")), id = row[0].strip(","), dest = dest)
+    # print(path)
+    # print(exists(path))
+    if not exists(path):
+      download_file(row)
