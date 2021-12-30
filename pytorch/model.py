@@ -7,8 +7,6 @@ from torchlibrosa.stft import Spectrogram, LogmelFilterBank
 from torchlibrosa.augmentation import SpecAugmentation
 
 from utils import move_data_to_device
-
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 default_params = dict(
@@ -54,18 +52,22 @@ class EfficientAudioNet(nn.Module):
     else:
       self.efficient_net = EfficientNet.from_name(efficient_net_type, in_channels=1, image_size = spectrogram_size, num_classes=self.num_classes)
 
+    self.sigmoid = nn.Sigmoid()
+
   def forward(self, x):
     x = self.spectrogram_extractor(x)
     x = self.logmel_extractor(x)
     if (self.training):
       x = self.spec_augmenter(x)
-    print(x.size())
     x = self.efficient_net(x)
+    x = self.sigmoid(x)
     return x
 
-(waveform, _) = librosa.core.load("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output/--_CyXnrDW0_30.000.wav", sr=None)
-waveform = waveform[None, :]
-waveform = move_data_to_device(waveform, "cpu")
-print(waveform.size())
-model = EfficientAudioNet()
-print(model(waveform).size())
+
+if __name__ == "__main__":
+  (waveform, _) = librosa.core.load("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output/--_CyXnrDW0_30.000.wav", sr=None)
+  waveform = waveform[None, :]
+  waveform = move_data_to_device(waveform, device)
+  print(waveform.size())
+  model = EfficientAudioNet()
+  print(model(waveform).size())

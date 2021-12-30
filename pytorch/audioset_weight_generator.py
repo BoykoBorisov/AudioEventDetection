@@ -3,6 +3,7 @@ from utils import get_audiofile_name_from_audioset_csv_row
 import numpy as np
 import csv
 import os
+import torch.utils.data as data
 
 def generate_weights(csv_filepath, audiofiles_filepath, output_filepath, labels_num=527):
   label_id_to_idx = get_id_to_index()
@@ -19,10 +20,10 @@ def generate_weights(csv_filepath, audiofiles_filepath, output_filepath, labels_
         for label in labels:
           # print(type(label_id_to_idx[label]))
           label_counts[label_id_to_idx[label]] += 1
-    print(label_counts)
+    # print(label_counts)
     calculate_weight = lambda f: 1000 / (f + 1)
     label_weights = calculate_weight(label_counts)
-    print(label_weights)
+    # print(label_weights)
     # For each sample the weight is the sum of for each label in sample (10000 / samples per label
   with open(csv_filepath) as csv_file:
     reader = csv.reader(csv_file, delimiter = " ")
@@ -42,4 +43,12 @@ def generate_weights(csv_filepath, audiofiles_filepath, output_filepath, labels_
           sample_weights.append(score)
   return sample_weights
 
- 
+def get_sampler(dataset, weights_filepath):
+  weights = np.zeros(dataset.__len__())
+  with open(weights_filepath) as csv_file:
+    reader = csv.reader(csv_file, delimiter = " ")
+    for row in reader:
+      if row[0] in dataset.file_id_to_idx:
+        weights[dataset.file_id_to_idx[row[0]]] = float(row[1])
+    # print(weights[0:100])
+  return data.WeightedRandomSampler(weights=weights, num_samples=dataset.__len__())
