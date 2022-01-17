@@ -72,7 +72,7 @@ class AudiosetDataset(Dataset):
       (other_waveform, _) = librosa.core.load(os.path.join(self.data_path, other_filename), sr = None)
       other_waveform = other_waveform[None, :]
       result = np.zeros((1, 160_000))
-      result[0, min(other_waveform.shape[1], 160000)] = other_waveform[:other_waveform.shape[0], :min(other_waveform.shape[1], 160000)]
+      result[0, 0:min(other_waveform.shape[1], 160000)] = other_waveform[:other_waveform.shape[0], :min(other_waveform.shape[1], 160000)]
       other_waveform = result
       lmbda = np.random.beta(self.mixup_alpha, self.mixup_alpha)
       waveform = self.mixup(waveform, other_waveform, lmbda)
