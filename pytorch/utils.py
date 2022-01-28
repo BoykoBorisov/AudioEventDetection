@@ -2,6 +2,8 @@ import torch
 import numpy as np
 from sklearn import metrics
 from scipy import stats
+import os
+import wave
 
 def move_data_to_device(x, device):
     if 'float' in str(x.dtype):
@@ -17,6 +19,21 @@ def move_data_to_device(x, device):
 def get_audiofile_name_from_audioset_csv_row(row):
     return row[0].strip(",") + "_" + str(row[1].strip().strip(",")) + ".wav"
 
+
+def remove_corrupt_audiofiles(filedir):
+    print("Removing corrupt audiofiles...")
+    error_count = 0
+    full_count = 0
+    for file_name in os.listdir(filedir):
+      try:
+        full_count += 1
+        file = wave.open(os.path.join(filedir, file_name))
+        file.close()
+      except:
+        error_count += 1
+        print(file_name, error_count, "/", full_count)
+        os.remove(os.path.join(filedir, file_name))
+    print("Process done, removed files count: " + error_count)
 
 """
     y_hat: numpy array (num_samples, num_classes), model prediction
