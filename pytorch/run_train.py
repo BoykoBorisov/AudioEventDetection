@@ -10,7 +10,7 @@ if __name__== '__main__':
   learning_rate = 0.01
   learning_rate_decay = 0
   learning_rate_dacay_step = 0
-  batch_size = 16 
+  batch_size = 32 
   warmup_iterations = 1000
 
   # hyperparameters for knowledge distilation
@@ -47,11 +47,14 @@ if __name__== '__main__':
   dataloader_training = DataLoader(dataset=dataset_training, batch_size=batch_size, 
                                    shuffle=False, sampler=weighted_sampler_training)
 
-  dataloader_validation = DataLoader(dataset=dataset_validation, batch_size = dataset_validation.__len__(), 
+  dataloader_validation = DataLoader(dataset=dataset_validation, batch_size = 16, 
                                     shuffle=False)
 
   model = EfficientAudioNet()
   teacher_model = load_model()
+
+  for name, param in teacher_model.named_parameters():
+    param.requires_grad = False
 
   train(model=model, teacher_model=teacher_model, dataloader_training=dataloader_training,
         dataloader_validation=dataloader_validation, epoch_count=epoch_count, learning_rate=learning_rate,
