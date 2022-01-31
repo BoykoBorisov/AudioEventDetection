@@ -1,4 +1,3 @@
-from ssl import OP_NO_RENEGOTIATION
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -31,7 +30,7 @@ def save_model(name, map, best_mAP, model, dir_path):
   state_dict = model.state_dict()
   torch.save(state_dict, file_path)
   if map > best_mAP:
-    file_name = "model_params_" + str(name) + ".pth"
+    file_name = "best_map_model_params_" + str(name) + ".pth"
     file_path = os.path.join(dir_path, file_name)
     torch.save(state_dict, file_path)
 
@@ -73,7 +72,8 @@ def weight_average(model, dir_path, start_epoch, end_epoch, dataloader_validatio
 def train(model, teacher_model, dataloader_training, dataloader_validation, epoch_count, 
           learning_rate, learning_rate_decay, learning_rate_dacay_step, warmup_iterations, 
           teacher_inference_weight, teacher_inference_temperature, should_apply_weight_averaging, 
-          weight_averaging_start_epoch, weight_averaging_end_epoch, dir_path_save_model_weights
+          weight_averaging_start_epoch, weight_averaging_end_epoch, dir_path_save_model_weights,
+          resume_training = False, resume_training_weights_path = "", resume_epoch = 0
         ):
         
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -87,9 +87,20 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
         optimizer = optim.Adam(model.parameters(), lr = learning_rate, weight_decay=5e-8)
         scheduler = optim.lr_scheduler.StepLR(optimizer, learning_rate_dacay_step, learning_rate_decay)
         iteration_count = 0
+        start_epoch = 0
         loss_fn = knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight)
+        if (resume_training):
+          start_epoch = resume_epoch
+          model.load_state_dict(torch.load(resume_training_weights_path, 
+            map_location=torch.device('cpu'))
+          )
+          for epoch in range(resume_epoch): 
+            scheduler.step()
+          start_epoch = resume_epoch
+
         print ("Starting training")
-        for epoch in range(epoch_count):
+        for epoch in range(start_epoch, epoch_count):
+          print(f"EPOCH {epoch} started, current lr: {optimizer.param_groups[0]['lr']}")
           epoch_start_time = time.time()
           total_epoch_loss = 0
           # Tell the model you are training it, affects how the built in dropout layers of
@@ -119,11 +130,13 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             if (iteration_count % 10 == 0):
               print(f"Epoch {epoch}: iteration {iteration}, loss this batch: {loss}", flush=True)
             iteration_count += 1
+            break
+
           model.eval()
           # VALIDATION
           ground_truth_validation = []
           prediction_validation = []
-
+          
           with torch.no_grad():
             print("VALIDATION")
             for (batch_waveforms, batch_labels) in dataloader_validation:
@@ -132,7 +145,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
               batch_waveforms = batch_waveforms.to(device)
               y_hat = model(batch_waveforms)
               prediction_validation.append(y_hat.cpu().detach())
-              ground_truth_validation.append(batch_labels.cpu().detach())
+              ground_truth_validation.append(batch_labels.detach())
 
             ground_truth_validation = torch.cat(ground_truth_validation)
             prediction_validation = torch.cat(prediction_validation)
@@ -161,7 +174,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           stats = get_stats(prediction_validation, ground_truth_validation)
           map = stats["MAP"]
           del ground_truth_validation
-          del prediction_validationå
+          del prediction_validation
           save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)
 
         

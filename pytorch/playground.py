@@ -1,27 +1,27 @@
-# from model import EfficientAudioNet
 # from time import time
 # from efficientnet_pytorch import EfficientNet
 # from efficientnet_pytorch.utils import get_same_padding_conv2d, Conv2dStaticSamePadding
 # from numpy import select
 # import librosa
 # from scipy.sparse import data
+# from model import EfficientAudioNet
 # from torch.nn.functional import sigmoid
 # from torchlibrosa.stft import Spectrogram, LogmelFilterBank
 # from torchlibrosa.augmentation import SpecAugmentation
 # from utils import move_data_to_device, get_stats
-from audioset_weight_generator import generate_weights, get_sampler
+# from audioset_weight_generator import generate_weights, get_sampler
 # from audioset_dataset import AudiosetDataset
 # from hear21passt.hear21passt.base import load_model, get_scene_embeddings, get_timestamp_embeddings
 # from torch.utils.data import DataLoader
-# import torch
+import torch
 # import numpy as np
 # import os
 # import wave
 
-generate_weights("/home/jupyter/ThirdYearProject/datasets/Audioset/unbalanced_train_segments.csv",
-                 "/home/jupyter/ThirdYearProject/data-loader2/output",
-                 "/home/jupyter/ThirdYearProject/datasets/weights/weights_unbalanced.csv"
-                )
+# generate_weights("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/datasets/Audioset/eval_segments.csv",
+#                  "/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output_eval",
+#                  "weights_eval.csv"
+#                 )
 
 
 # dataset = AudiosetDataset("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output",
@@ -65,4 +65,4 @@ generate_weights("/home/jupyter/ThirdYearProject/datasets/Audioset/unbalanced_tr
 #     print(file_name, error_count, "/", full_count)
 #     os.remove(os.path.join(root_dir, file_name))
 # print(error_count)
-  
+print(torch.__version__)

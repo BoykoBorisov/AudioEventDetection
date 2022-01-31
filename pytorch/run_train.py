@@ -1,3 +1,4 @@
+from tkinter import E
 from audioset_dataset import AudiosetDataset
 from torch.utils.data import DataLoader
 from audioset_weight_generator import get_sampler
@@ -10,7 +11,7 @@ if __name__== '__main__':
   learning_rate = 0.001
   learning_rate_decay = 0.5
   learning_rate_dacay_step = 5
-  batch_size = 35
+  batch_size = 16
   warmup_iterations = 10
 
   # hyperparameters for knowledge distilation
@@ -29,26 +30,29 @@ if __name__== '__main__':
   num_classes = 527
   efficientnet_size = 2
 
-  dir_path_save_model_weights = r"/home/jupyter/ThirdYearProject/model_weights"
-  dir_path_sample_weights = r"/home/jupyter/ThirdYearProject/datasets/weights/weights_bal_train.csv"
-  dir_path_samples_training = r"/home/jupyter/ThirdYearProject/data-loader2/output_bal_train"
-  dir_path_sample_validation = r"/home/jupyter/ThirdYearProject/data-loader2/output_eval"
+  dir_path_save_model_weights = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/model_weights"
+  dir_path_sample_weights = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/weights.csv"
+  dir_path_samples_training = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output"
+  dir_path_sample_validation = r"//Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output_eval"
 
-  csv_path_training_samples = r"/home/jupyter/ThirdYearProject/datasets/Audioset/balanced_train_segments.csv"
-  csv_path_validation_samples = r"/home/jupyter/ThirdYearProject/datasets/Audioset/eval_segments.csv"
+  csv_path_training_samples = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/datasets/Audioset/unbalanced_train_segments.csv"
+  csv_path_validation_samples = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/datasets/Audioset/eval_segments.csv"
 
   dataset_training = AudiosetDataset(data_path=dir_path_samples_training, csv_path=csv_path_training_samples,
                                      num_classes=num_classes, mixup_rate=mixup_rate, mixup_alpha=mixup_weight)
+
   dataset_validation = AudiosetDataset(data_path=dir_path_sample_validation, csv_path=csv_path_validation_samples,
-                                       num_classes=num_classes, mixup_rate=0, mixup_alpha=0) 
+                                       num_classes=num_classes, mixup_rate=0, mixup_alpha=0)
+
   weighted_sampler_training = get_sampler(dataset_training, dir_path_sample_weights)
 
 
   dataloader_training = DataLoader(dataset=dataset_training, batch_size=batch_size, 
-                                   shuffle=False, sampler=weighted_sampler_training)
+                                   shuffle=False, sampler=weighted_sampler_training,
+                                   pin_memory=True)
 
-  dataloader_validation = DataLoader(dataset=dataset_validation, batch_size = 34, 
-                                    shuffle=False)
+  dataloader_validation = DataLoader(dataset=dataset_validation, batch_size = 20, 
+                                    shuffle=False, pin_memory=True)
 
   model = EfficientAudioNet()
   
@@ -58,12 +62,15 @@ if __name__== '__main__':
   for name, param in teacher_model.named_parameters():
     param.requires_grad = False
 
+
   train(model=model, teacher_model=teacher_model, dataloader_training=dataloader_training,
         dataloader_validation=dataloader_validation, epoch_count=epoch_count, learning_rate=learning_rate,
         learning_rate_decay=learning_rate_decay, learning_rate_dacay_step=learning_rate_dacay_step, warmup_iterations=warmup_iterations,
         teacher_inference_weight=teacher_inference_weight, teacher_inference_temperature=teacher_inference_temperature,
         should_apply_weight_averaging=should_apply_weight_averaging, weight_averaging_start_epoch=weight_averaging_start_epoch, 
-        weight_averaging_end_epoch=weight_averaging_end_epoch, dir_path_save_model_weights=dir_path_save_model_weights
+        weight_averaging_end_epoch=weight_averaging_end_epoch, dir_path_save_model_weights=dir_path_save_model_weights,
+        resume_training=True, resume_training_weights_path="/Users/boykoborisov/Desktop/Uni/ThirdYearProject/model_weights/test_weights/model_params_18.pth",
+        resume_epoch=19
       )
 
 
