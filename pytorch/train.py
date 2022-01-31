@@ -15,7 +15,8 @@ def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inferen
   def loss_fn(student_inference, teacher_inference, ground_truth):
     teacher_inference = teacher_inference / teacher_inference_temperature
     teacher_inference = F.softmax(teacher_inference, dim=1)
-    student_inference_distilation = F.softmax(student_inference / teacher_inference_temperature, dim=1)
+    student_inference_distilation = F.log_softmax(student_inference / teacher_inference_temperature, dim=1)
+    # print ("student_inference size: ", student_inference.size())
     # Multiply by square of temperature to scale it up, this technique is mentioned in the original paper
     # https://arxiv.org/pdf/1503.02531.pdf
     soft_target_loss = F.kl_div(student_inference_distilation, teacher_inference, reduction="batchmean") * teacher_inference_temperature * teacher_inference_temperature
@@ -96,6 +97,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           model.train()
 
           for iteration, (batch_waveforms, batch_labels) in enumerate(dataloader_training):
+            optimizer.zero_grad()
             batch_waveforms = batch_waveforms.float()
             batch_waveforms = torch.squeeze(batch_waveforms)
             batch_waveforms = batch_waveforms.to(device)
@@ -105,12 +107,11 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
               current_learning_rate = (iteration_count / warmup_iterations) * learning_rate
               for group in optimizer.param_groups:
                 group["lr"] = current_learning_rate
-              print(f"Warm up lr {current_learning_rate}", flush=True)
+              # print(f"Warm up lr {current_learning_rate}\r", flush=True)
 
             prediction_teacher = teacher_model(batch_waveforms)
             y_hat = model(batch_waveforms)
             loss = loss_fn(y_hat, prediction_teacher, batch_labels)
-            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
@@ -118,26 +119,26 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             if (iteration_count % 10 == 0):
               print(f"Epoch {epoch}: iteration {iteration}, loss this batch: {loss}", flush=True)
             iteration_count += 1
-            break
           model.eval()
           # VALIDATION
           ground_truth_validation = []
           prediction_validation = []
 
           with torch.no_grad():
-            for (batch_waveforms, ground_truth_labels) in dataloader_validation:
+            print("VALIDATION")
+            for (batch_waveforms, batch_labels) in dataloader_validation:
               batch_waveforms = batch_waveforms.float()
               batch_waveforms = torch.squeeze(batch_waveforms)
               batch_waveforms = batch_waveforms.to(device)
-              ground_truth_labels = ground_truth_labels.to(device)
               y_hat = model(batch_waveforms)
               prediction_validation.append(y_hat.cpu().detach())
-              ground_truth_validation.append(ground_truth_labels.cpu().detach())
+              ground_truth_validation.append(batch_labels.cpu().detach())
 
             ground_truth_validation = torch.cat(ground_truth_validation)
             prediction_validation = torch.cat(prediction_validation)
             stats = get_stats(prediction_validation, ground_truth_validation)
             map = stats["MAP"]
+          scheduler.step()
           save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)
           epoch_duration_minutes = (time.time() - epoch_start_time) / 60
           print(f"EPOCH: {epoch} | MaP: {map} | EPOCH DURATION {epoch_duration_minutes}")
@@ -159,6 +160,8 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           prediction_validation = torch.cat(prediction_validation)
           stats = get_stats(prediction_validation, ground_truth_validation)
           map = stats["MAP"]
+          del ground_truth_validation
+          del prediction_validationå
           save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)
 
         

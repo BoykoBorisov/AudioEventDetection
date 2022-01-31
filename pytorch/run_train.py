@@ -7,15 +7,15 @@ from train import train
 if __name__== '__main__':
   # hyperparameters for training
   epoch_count = 30
-  learning_rate = 0.01
-  learning_rate_decay = 0
-  learning_rate_dacay_step = 0
-  batch_size = 32 
-  warmup_iterations = 1000
+  learning_rate = 0.001
+  learning_rate_decay = 0.5
+  learning_rate_dacay_step = 5
+  batch_size = 35
+  warmup_iterations = 10
 
   # hyperparameters for knowledge distilation
   teacher_inference_weight = 0.2
-  teacher_inference_temperature = 4
+  teacher_inference_temperature = 2
 
   # hyperparameters for mixup
   mixup_rate = 0.7
@@ -29,15 +29,15 @@ if __name__== '__main__':
   num_classes = 527
   efficientnet_size = 2
 
-  dir_path_save_model_weights = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/model_weights"
-  dir_path_sample_weights = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/weights_eval.csv"
-  dir_path_samples_training = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output_eval"
-  dir_path_sample_validation = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output_eval"
+  dir_path_save_model_weights = r"/home/jupyter/ThirdYearProject/model_weights"
+  dir_path_sample_weights = r"/home/jupyter/ThirdYearProject/datasets/weights/weights_bal_train.csv"
+  dir_path_samples_training = r"/home/jupyter/ThirdYearProject/data-loader2/output_bal_train"
+  dir_path_sample_validation = r"/home/jupyter/ThirdYearProject/data-loader2/output_eval"
 
-  csv_path_training_samples = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/datasets/Audioset/eval_segments.csv"
-  csv_path_validation_samples = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/datasets/Audioset/eval_segments.csv"
+  csv_path_training_samples = r"/home/jupyter/ThirdYearProject/datasets/Audioset/balanced_train_segments.csv"
+  csv_path_validation_samples = r"/home/jupyter/ThirdYearProject/datasets/Audioset/eval_segments.csv"
 
-  dataset_training = AudiosetDataset(data_path=dir_path_samples_training, csv_path=csv_path_training_samples, 
+  dataset_training = AudiosetDataset(data_path=dir_path_samples_training, csv_path=csv_path_training_samples,
                                      num_classes=num_classes, mixup_rate=mixup_rate, mixup_alpha=mixup_weight)
   dataset_validation = AudiosetDataset(data_path=dir_path_sample_validation, csv_path=csv_path_validation_samples,
                                        num_classes=num_classes, mixup_rate=0, mixup_alpha=0) 
@@ -47,10 +47,12 @@ if __name__== '__main__':
   dataloader_training = DataLoader(dataset=dataset_training, batch_size=batch_size, 
                                    shuffle=False, sampler=weighted_sampler_training)
 
-  dataloader_validation = DataLoader(dataset=dataset_validation, batch_size = 16, 
+  dataloader_validation = DataLoader(dataset=dataset_validation, batch_size = 34, 
                                     shuffle=False)
 
   model = EfficientAudioNet()
+  
+  #hear_passt_model
   teacher_model = load_model()
 
   for name, param in teacher_model.named_parameters():
