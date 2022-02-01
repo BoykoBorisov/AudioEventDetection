@@ -8,10 +8,12 @@ import os
 
 from utils import get_stats
 
-def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight): 
+def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight, teacher_model): 
   teacher_inference_temperature = teacher_inference_temperature
   teacher_inference_weight = teacher_inference_weight
-  def loss_fn(student_inference, teacher_inference, ground_truth):
+  teacher_model = teacher_model
+  def loss_fn(student_inference, waveforms, ground_truth):
+    teacher_inference = teacher_model(waveforms)
     teacher_inference = teacher_inference / teacher_inference_temperature
     teacher_inference = F.softmax(teacher_inference, dim=1)
     student_inference_distilation = F.log_softmax(student_inference / teacher_inference_temperature, dim=1)
@@ -23,6 +25,11 @@ def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inferen
     return teacher_inference_weight * soft_target_loss + (1 - teacher_inference_weight) * ground_truth_loss
   return loss_fn
 
+def cross_entropy_loss_fn(*_):
+  def loss_fn(student_inference, _, ground_truth):
+    return F.cross_entropy(student_inference, ground_truth)
+  
+  return loss_fn
 
 def save_model(name, map, best_mAP, model, dir_path):
   file_name = "model_params_" + str(name) + "_" + str(map) + ".pth"
@@ -36,15 +43,21 @@ def save_model(name, map, best_mAP, model, dir_path):
 
 def weight_average(model, dir_path, start_epoch, end_epoch, dataloader_validation, best_mAP):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-  file_name = "model_params" + end_epoch + ".pth"
-  file_path = os.path.join(dir_path, file_name)
-  state_dict = torch.load(file_path)
+  file_name = "model_params_" + end_epoch
+  filenames = os.listdir(dir_path)
+  for filename in filenames:
+    if filename.startswith(file_name):
+      file_path = os.path.join(dir_path, file_name)
+      state_dict = torch.load(file_path)
+  
   for epoch in range(start_epoch, end_epoch):
-    file_name = "model_params" + epoch + ".pth"
-    file_path = os.path.join(dir_path, file_name)
-    other_epoch_state_dict =  torch.load(file_path)
-    for key in state_dict:
-      state_dict[key] += other_epoch_state_dict[key]
+    file_name = "model_params_" + epoch
+    for filename in filenames:
+      if filename.startswith(filename):
+        file_path = os.path.join(dir_path, file_name)
+        other_epoch_state_dict =  torch.load(file_path)
+        for key in state_dict:
+          state_dict[key] += other_epoch_state_dict[key]
   
   lens = end_epoch - start_epoch + 1
   for key in state_dict:
@@ -61,7 +74,7 @@ def weight_average(model, dir_path, start_epoch, end_epoch, dataloader_validatio
       batch_labels = batch_labels.to(device)
       y_hat = model(batch_waveforms)
       prediction_validation.append(y_hat.cpu().detach())
-      ground_truth_validation.append(ground_truth_labels.cpu().detach())
+      ground_truth_validation.append(ground_truth_labels.detach())
 
       ground_truth_validation = torch.cat(ground_truth_validation)
       prediction_validation = torch.cat(prediction_validation)
@@ -83,12 +96,18 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
         best_epoch = 0
 
         model = model.to(device)
-        teacher_model = teacher_model.to(device)
+
         optimizer = optim.Adam(model.parameters(), lr = learning_rate, weight_decay=5e-8)
         scheduler = optim.lr_scheduler.StepLR(optimizer, learning_rate_dacay_step, learning_rate_decay)
         iteration_count = 0
         start_epoch = 0
-        loss_fn = knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight)
+
+        if teacher_model is not None:
+          teacher_model = teacher_model.to(device)
+          loss_fn = knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight, teacher_model)
+        else:
+          loss_fn = cross_entropy_loss_fn()
+          
         if (resume_training):
           start_epoch = resume_epoch
           model.load_state_dict(torch.load(resume_training_weights_path))
@@ -120,9 +139,8 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
                 group["lr"] = current_learning_rate
               # print(f"Warm up lr {current_learning_rate}\r", flush=True)
 
-            prediction_teacher = teacher_model(batch_waveforms)
             y_hat = model(batch_waveforms)
-            loss = loss_fn(y_hat, prediction_teacher, batch_labels)
+            loss = loss_fn(y_hat, batch_waveforms, batch_labels)
             loss.backward()
             optimizer.step()
 
@@ -156,6 +174,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)
           epoch_duration_minutes = (time.time() - epoch_start_time) / 60
           print(f"EPOCH: {epoch} | MaP: {map} | EPOCH DURATION {epoch_duration_minutes}")
+          best_mAP = max(map, best_mAP)
         
         if should_apply_weight_averaging:
           weight_average(model, weight_averaging_start_epoch, weight_averaging_end_epoch, dataloader_validation, best_mAP)

@@ -62,6 +62,7 @@ if __name__== '__main__':
   for name, param in teacher_model.named_parameters():
     param.requires_grad = False
 
+  # teacher_model = None
 
   train(model=model, teacher_model=teacher_model, dataloader_training=dataloader_training,
         dataloader_validation=dataloader_validation, epoch_count=epoch_count, learning_rate=learning_rate,
