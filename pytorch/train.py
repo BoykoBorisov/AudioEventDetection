@@ -25,7 +25,7 @@ def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inferen
 
 
 def save_model(name, map, best_mAP, model, dir_path):
-  file_name = "model_params_" + str(name) + ".pth"
+  file_name = "model_params_" + str(name) + "_" + str(map) + ".pth"
   file_path = os.path.join(dir_path, file_name)
   state_dict = model.state_dict()
   torch.save(state_dict, file_path)
@@ -91,9 +91,9 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
         loss_fn = knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight)
         if (resume_training):
           start_epoch = resume_epoch
-          model.load_state_dict(torch.load(resume_training_weights_path, 
-            map_location=torch.device('cpu'))
-          )
+          model.load_state_dict(torch.load(resume_training_weights_path))
+            # map_location=torch.device('cpu'))
+          
           for epoch in range(resume_epoch): 
             scheduler.step()
           start_epoch = resume_epoch
@@ -113,7 +113,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             batch_waveforms = torch.squeeze(batch_waveforms)
             batch_waveforms = batch_waveforms.to(device)
             batch_labels = batch_labels.to(device)
-            if (iteration_count < warmup_iterations):
+            if (iteration_count < warmup_iterations and epoch ==  0):
               # Gradual warmup strategy
               current_learning_rate = (iteration_count / warmup_iterations) * learning_rate
               for group in optimizer.param_groups:
@@ -130,7 +130,6 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             if (iteration_count % 10 == 0):
               print(f"Epoch {epoch}: iteration {iteration}, loss this batch: {loss}", flush=True)
             iteration_count += 1
-            break
 
           model.eval()
           # VALIDATION
@@ -152,6 +151,8 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             stats = get_stats(prediction_validation, ground_truth_validation)
             map = stats["MAP"]
           scheduler.step()
+          del ground_truth_validation
+          del prediction_validation
           save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)
           epoch_duration_minutes = (time.time() - epoch_start_time) / 60
           print(f"EPOCH: {epoch} | MaP: {map} | EPOCH DURATION {epoch_duration_minutes}")
@@ -162,12 +163,11 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           ground_truth_validation = []
           prediction_validation = []
 
-          for (batch_waveforms, ground_truth_labels) in dataloader_validation:
+          for (batch_waveforms, batch_labels) in dataloader_validation:
             batch_waveforms = batch_waveforms.to(device)
-            batch_labels = batch_labels.to(device)
             y_hat = model(batch_waveforms)
-            prediction_validation.append(y_hat.cpu().detach())
-            ground_truth_validation.append(ground_truth_labels.cpu().detach())
+            prediction_validation.append(y_hat.detach())
+            ground_truth_validation.append(batch_labels.cpu().detach())
 
           ground_truth_validation = torch.cat(ground_truth_validation)
           prediction_validation = torch.cat(prediction_validation)
