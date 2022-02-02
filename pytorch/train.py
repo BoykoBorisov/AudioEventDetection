@@ -8,7 +8,8 @@ import os
 
 from utils import get_stats
 
-def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight, teacher_model): 
+epsilon = 0.00001
+def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight, teacher_model):
   teacher_inference_temperature = teacher_inference_temperature
   teacher_inference_weight = teacher_inference_weight
   teacher_model = teacher_model
@@ -27,7 +28,8 @@ def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inferen
 
 def cross_entropy_loss_fn(*_):
   def loss_fn(student_inference, _, ground_truth):
-    return F.cross_entropy(student_inference, ground_truth)
+    student_inference = torch.clamp(student_inference, epsilon, 1)
+    return F.binary_cross_entropy(student_inference, ground_truth.float())
   
   return loss_fn
 
@@ -145,7 +147,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             optimizer.step()
 
             total_epoch_loss += loss.item()
-            if (iteration_count % 10 == 0):
+            if (iteration_count % 20 == 0):
               print(f"Epoch {epoch}: iteration {iteration}, loss this batch: {loss}", flush=True)
             iteration_count += 1
 
@@ -167,6 +169,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             ground_truth_validation = torch.cat(ground_truth_validation)
             prediction_validation = torch.cat(prediction_validation)
             stats = get_stats(prediction_validation, ground_truth_validation)
+            print(stats["class_ap"])
             map = stats["MAP"]
           scheduler.step()
           del ground_truth_validation
