@@ -9,9 +9,9 @@ if __name__== '__main__':
   # hyperparameters for training
   epoch_count = 26
   learning_rate = 0.001
-  learning_rate_decay = 0.75
+  learning_rate_decay = 1
   learning_rate_dacay_step = 14
-  batch_size = 2
+  batch_size = 40
   warmup_iterations = 100
 
   # hyperparameters for knowledge distilation
@@ -19,7 +19,7 @@ if __name__== '__main__':
   teacher_inference_temperature = 2
 
   # hyperparameters for mixup
-  mixup_rate = 1
+  mixup_rate = 0
   mixup_weight = 0.5
 
   # hyperparameters for weight averaging 
@@ -70,6 +70,6 @@ if __name__== '__main__':
         teacher_inference_weight=teacher_inference_weight, teacher_inference_temperature=teacher_inference_temperature,
         should_apply_weight_averaging=should_apply_weight_averaging, weight_averaging_start_epoch=weight_averaging_start_epoch, 
         weight_averaging_end_epoch=weight_averaging_end_epoch, dir_path_save_model_weights=dir_path_save_model_weights,
-        resume_training=False, resume_training_weights_path = "/home/jupyter/ThirdYearProject/model_weights/model_params_16_0.16835561338098948.pth", 
-        resume_epoch = 17)
+        resume_training=False, resume_training_weights_path = "/home/jupyter/ThirdYearProject/model_weights/model_params_6_0.16051092838844316.pth", 
+        resume_epoch = 7)
   

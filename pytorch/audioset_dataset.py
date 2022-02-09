@@ -81,6 +81,7 @@ class AudiosetDataset(Dataset):
         y[label_idx] = lmbda
       for label_idx in self.file_id_to_idxs[other_filename]:
         y[label_idx] += (1 - lmbda)
+      y /= np.max(y)
     else:
       y = np.zeros(self.num_classes)
       for label_idx in self.file_id_to_idxs[filename]:

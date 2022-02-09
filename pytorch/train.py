@@ -22,7 +22,8 @@ def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inferen
     # Multiply by square of temperature to scale it up, this technique is mentioned in the original paper
     # https://arxiv.org/pdf/1503.02531.pdf
     soft_target_loss = F.kl_div(student_inference_distilation, teacher_inference, reduction="batchmean") * teacher_inference_temperature * teacher_inference_temperature
-    ground_truth_loss = F.cross_entropy(student_inference, ground_truth)
+    student_inference = torch.clamp(student_inference, epsilon, 1)
+    ground_truth_loss = F.binary_cross_entropy(student_inference, ground_truth.float())
     return teacher_inference_weight * soft_target_loss + (1 - teacher_inference_weight) * ground_truth_loss
   return loss_fn
 
@@ -163,6 +164,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
               batch_waveforms = torch.squeeze(batch_waveforms)
               batch_waveforms = batch_waveforms.to(device)
               y_hat = model(batch_waveforms)
+              y_hat = torch.clamp(y_hat, epsilon, 1)
               prediction_validation.append(y_hat.cpu().detach())
               ground_truth_validation.append(batch_labels.detach())
 
@@ -188,6 +190,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           for (batch_waveforms, batch_labels) in dataloader_validation:
             batch_waveforms = batch_waveforms.to(device)
             y_hat = model(batch_waveforms)
+            # y_hat = torch.clamp(y_hat, epsilon, 1)
             prediction_validation.append(y_hat.detach())
             ground_truth_validation.append(batch_labels.cpu().detach())
 
