@@ -89,7 +89,8 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           learning_rate, learning_rate_decay, learning_rate_dacay_step, warmup_iterations, 
           teacher_inference_weight, teacher_inference_temperature, should_apply_weight_averaging, 
           weight_averaging_start_epoch, weight_averaging_end_epoch, dir_path_save_model_weights,
-          resume_training = False, resume_training_weights_path = "", resume_epoch = 0
+          stop_knowledge_distilation,
+          resume_training = False, resume_training_weights_path = "", resume_epoch = 0, 
         ):
         
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -123,6 +124,10 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
         print ("Starting training")
         for epoch in range(start_epoch, epoch_count):
           print(f"EPOCH {epoch} started, current lr: {optimizer.param_groups[0]['lr']}")
+          if stop_knowledge_distilation == epoch:
+            loss_fn = cross_entropy_loss_fn()
+            teacher_model = None
+            
           epoch_start_time = time.time()
           total_epoch_loss = 0
           # Tell the model you are training it, affects how the built in dropout layers of
