@@ -5,6 +5,7 @@ from torch import nn
 from efficientnet_pytorch import EfficientNet
 from torchlibrosa.stft import Spectrogram, LogmelFilterBank
 from torchlibrosa.augmentation import SpecAugmentation
+from time import time
 
 from utils import move_data_to_device
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -57,6 +58,7 @@ class EfficientAudioNet(nn.Module):
   def forward(self, x):
     x = self.spectrogram_extractor(x)
     x = self.logmel_extractor(x)
+    # print(self.training)
     if (self.training):
       x = self.spec_augmenter(x)
     x = self.efficient_net(x)
@@ -70,4 +72,7 @@ if __name__ == "__main__":
   waveform = move_data_to_device(waveform, device)
   print(waveform.size())
   model = EfficientAudioNet()
-  print(model(waveform).size())
+  with torch.no_grad():
+    t = time()
+    print(model(waveform).size())
+    print((time() - t))

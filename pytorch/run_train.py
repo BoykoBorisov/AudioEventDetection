@@ -11,7 +11,7 @@ if __name__== '__main__':
   learning_rate = 0.001
   learning_rate_decay = 1
   learning_rate_dacay_step = 14
-  batch_size = 40
+  batch_size = 4
   warmup_iterations = 100
 
   # hyperparameters for knowledge distilation
@@ -30,13 +30,12 @@ if __name__== '__main__':
   num_classes = 527
   efficientnet_size = 2
 
-  dir_path_save_model_weights = r"/home/jupyter/ThirdYearProject/model_weights"
-  dir_path_sample_weights = r"/home/jupyter/ThirdYearProject/datasets/weights/weights_bal_train.csv"
-  dir_path_samples_training = r"/home/jupyter/ThirdYearProject/data-loader2/output_bal_train"
-  dir_path_sample_validation = r"/home/jupyter/ThirdYearProject/data-loader2/output_eval"
-
-  csv_path_training_samples = r"/home/jupyter/ThirdYearProject/datasets/Audioset/balanced_train_segments.csv"
-  csv_path_validation_samples = r"/home/jupyter/ThirdYearProject/datasets/Audioset/eval_segments.csv"
+  dir_path_save_model_weights = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/model_weights"
+  dir_path_sample_weights = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/weights.csv"
+  dir_path_samples_training = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output"
+  dir_path_sample_validation = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output_eval"
+  csv_path_training_samples = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/datasets/Audioset/unbalanced_train_segments.csv"
+  csv_path_validation_samples = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/datasets/Audioset/eval_segments.csv"
 
   dataset_training = AudiosetDataset(data_path=dir_path_samples_training, csv_path=csv_path_training_samples,
                                      num_classes=num_classes, mixup_rate=mixup_rate, mixup_alpha=mixup_weight)
@@ -52,7 +51,7 @@ if __name__== '__main__':
                                    sampler=weighted_sampler_training,
                                    pin_memory=False, num_workers=4)
 
-  dataloader_validation = DataLoader(dataset=dataset_validation, batch_size = 45, 
+  dataloader_validation = DataLoader(dataset=dataset_validation, batch_size = 4, 
                                     shuffle=False, pin_memory=True, num_workers=4)
 
   model = EfficientAudioNet()

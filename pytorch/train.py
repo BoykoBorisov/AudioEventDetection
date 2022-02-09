@@ -151,6 +151,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             if (iteration_count % 20 == 0):
               print(f"Epoch {epoch}: iteration {iteration}, loss this batch: {loss}", flush=True)
             iteration_count += 1
+            # break
 
           model.eval()
           # VALIDATION
@@ -167,6 +168,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
               y_hat = torch.clamp(y_hat, epsilon, 1)
               prediction_validation.append(y_hat.cpu().detach())
               ground_truth_validation.append(batch_labels.detach())
+              # break
 
             ground_truth_validation = torch.cat(ground_truth_validation)
             prediction_validation = torch.cat(prediction_validation)
@@ -182,7 +184,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           best_mAP = max(map, best_mAP)
         
         if should_apply_weight_averaging:
-          weight_average(model, weight_averaging_start_epoch, weight_averaging_end_epoch, dataloader_validation, best_mAP)
+          weight_average(model, dir_path_save_model_weights, weight_averaging_start_epoch, weight_averaging_end_epoch, dataloader_validation, best_mAP)
 
           ground_truth_validation = []
           prediction_validation = []
