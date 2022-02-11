@@ -127,7 +127,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           if stop_knowledge_distilation == epoch:
             loss_fn = cross_entropy_loss_fn()
             teacher_model = None
-            
+
           epoch_start_time = time.time()
           total_epoch_loss = 0
           # Tell the model you are training it, affects how the built in dropout layers of
@@ -178,7 +178,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             ground_truth_validation = torch.cat(ground_truth_validation)
             prediction_validation = torch.cat(prediction_validation)
             stats = get_stats(prediction_validation, ground_truth_validation)
-            print(stats["class_ap"])
+            # print(stats["class_ap"])
             map = stats["MAP"]
           scheduler.step()
           del ground_truth_validation

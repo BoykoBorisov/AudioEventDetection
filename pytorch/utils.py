@@ -46,8 +46,8 @@ def get_stats(y_hat, y):
     auc_per_class = np.zeros(num_classes)
     # print(y[:,0])
     for cls in range(num_classes):
-        ap_per_class[cls] = metrics.average_precision_score(y[:,cls], y_hat[:,cls])
-        auc_per_class[cls] = metrics.roc_auc_score(y[:, cls], y_hat[:, cls])
+        ap_per_class[cls] = metrics.average_precision_score(y[:,cls], y_hat[:,cls], average="None")
+        auc_per_class[cls] = metrics.roc_auc_score(y[:, cls], y_hat[:, cls], average=None)
     mean_ap = np.mean(ap_per_class)
     mean_auc = np.mean(auc_per_class)
     d_prime = stats.norm().ppf(mean_auc) * np.sqrt(2.0)
