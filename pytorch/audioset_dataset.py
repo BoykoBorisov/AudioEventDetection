@@ -33,8 +33,15 @@ def get_id_to_index():
       id_to_index[rows[i][1]] = int(rows[i][0])
     return id_to_index
 
-# print(get_index_to_id())
-# print(get_id_to_labels())
+def get_index_to_label():
+  with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "datasets/Audioset/class_labels_indices.csv"))) as file:
+    reader = csv.reader(file, delimiter=",")
+    rows = list(reader)
+    index_to_label = [0] * (len(rows) - 1)
+    for i in range(1, len(rows)):
+      index_to_label[int(rows[i][0])] = rows[i][2]
+    return index_to_label
+
 
 class AudiosetDataset(Dataset):
   def __init__(self, data_path, csv_path, num_classes=527, mixup_rate=1, mixup_alpha=0.5) -> None:

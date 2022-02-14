@@ -1,9 +1,12 @@
 from tkinter import E
+
+import torch
 from audioset_dataset import AudiosetDataset
 from torch.utils.data import DataLoader
 from audioset_weight_generator import get_sampler
 from model import EfficientAudioNet
 from hear21passt.hear21passt.base import load_model
+from panns_inference import AudioTagging, models
 from train import train
 if __name__== '__main__':
   # hyperparameters for training
@@ -61,7 +64,14 @@ if __name__== '__main__':
 
   # for name, param in teacher_model.named_parameters():
     # param.requires_grad = False
-  teacher_model = None
+  # teacher_model = None
+  teacher_model = models.Cnn14(sample_rate=16000, window_size=512, 
+                hop_size=160, mel_bins=64, fmin=50, fmax=14000, 
+                classes_num=527)
+  teacher_model.load_state_dict(torch.load("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/Cnn14_16k_mAP=0.438.pth", map_location=torch.device('cpu'))["model"])
+  for name, param in teacher_model.named_parameters():
+    param.requires_grad = False
+  # teacher_model = AudioTagging(model=m)
 
   train(model=model, teacher_model=teacher_model, dataloader_training=dataloader_training,
         dataloader_validation=dataloader_validation, epoch_count=epoch_count, learning_rate=learning_rate,
@@ -69,6 +79,7 @@ if __name__== '__main__':
         teacher_inference_weight=teacher_inference_weight, teacher_inference_temperature=teacher_inference_temperature,
         should_apply_weight_averaging=should_apply_weight_averaging, weight_averaging_start_epoch=weight_averaging_start_epoch, 
         weight_averaging_end_epoch=weight_averaging_end_epoch, dir_path_save_model_weights=dir_path_save_model_weights,
+        stop_knowledge_distilation=None, 
         resume_training=False, resume_training_weights_path = "/home/jupyter/ThirdYearProject/model_weights/model_params_6_0.16051092838844316.pth", 
         resume_epoch = 7)
   

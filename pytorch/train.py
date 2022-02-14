@@ -14,7 +14,7 @@ def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inferen
   teacher_inference_weight = teacher_inference_weight
   teacher_model = teacher_model
   def loss_fn(student_inference, waveforms, ground_truth):
-    teacher_inference = teacher_model(waveforms)
+    teacher_inference = teacher_model(waveforms)["clipwise_output"]
     teacher_inference = teacher_inference / teacher_inference_temperature
     teacher_inference = F.softmax(teacher_inference, dim=1)
     student_inference_distilation = F.log_softmax(student_inference / teacher_inference_temperature, dim=1)
