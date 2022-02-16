@@ -45,6 +45,7 @@ def save_model(name, map, best_mAP, model, dir_path):
     torch.save(state_dict, file_path)
 
 def weight_average(model, dir_path, start_epoch, end_epoch, dataloader_validation, best_mAP):
+  print("WEIGHT AVERAGING")
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   file_name = "model_params_" + end_epoch
   filenames = os.listdir(dir_path)
@@ -68,21 +69,23 @@ def weight_average(model, dir_path, start_epoch, end_epoch, dataloader_validatio
   
   model.load_state_dict(state_dict)
   # validation
+  print("VALIDATION")
   ground_truth_validation = []
   prediction_validation = []
 
   with torch.no_grad():
     for (batch_waveforms, ground_truth_labels) in dataloader_validation:
       batch_waveforms = batch_waveforms.to(device)
-      batch_labels = batch_labels.to(device)
+      ground_truth_labels = ground_truth_labels.to(device)
       y_hat = model(batch_waveforms)
       prediction_validation.append(y_hat.cpu().detach())
       ground_truth_validation.append(ground_truth_labels.detach())
 
-      ground_truth_validation = torch.cat(ground_truth_validation)
-      prediction_validation = torch.cat(prediction_validation)
-      stats = get_stats(prediction_validation, ground_truth_validation)
-      mAP = stats["MAP"]
+    ground_truth_validation = torch.cat(ground_truth_validation)
+    prediction_validation = torch.cat(prediction_validation)
+    stats = get_stats(prediction_validation, ground_truth_validation)
+    mAP = stats["MAP"]
+    print(f"WEIGHT AVERAGING | MAP : {mAP}")
   save_model("weight_averaging", mAP, best_mAP, model, dir_path)
 
 def train(model, teacher_model, dataloader_training, dataloader_validation, epoch_count, 
