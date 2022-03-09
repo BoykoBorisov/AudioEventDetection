@@ -5,6 +5,7 @@ import torch.optim as optim
 
 import time
 import os
+import gc
 
 from utils import get_stats
 
@@ -14,7 +15,7 @@ def knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inferen
   teacher_inference_weight = teacher_inference_weight
   teacher_model = teacher_model
   def loss_fn(student_inference, waveforms, ground_truth):
-    teacher_inference = teacher_model(waveforms)["clipwise_output"]
+    teacher_inference = teacher_model(waveforms)
     teacher_inference = teacher_inference / teacher_inference_temperature
     teacher_inference = F.softmax(teacher_inference, dim=1)
     student_inference_distilation = F.log_softmax(student_inference / teacher_inference_temperature, dim=1)
@@ -47,25 +48,25 @@ def save_model(name, map, best_mAP, model, dir_path):
 def weight_average(model, dir_path, start_epoch, end_epoch, dataloader_validation, best_mAP):
   print("WEIGHT AVERAGING")
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-  file_name = "model_params_" + end_epoch
+  file_name = "model_params_" + str(end_epoch)
   filenames = os.listdir(dir_path)
   for filename in filenames:
     if filename.startswith(file_name):
-      file_path = os.path.join(dir_path, file_name)
+      file_path = os.path.join(dir_path, filename)
       state_dict = torch.load(file_path)
   
   for epoch in range(start_epoch, end_epoch):
-    file_name = "model_params_" + epoch
+    file_name = "model_params_" + str(epoch) + _
     for filename in filenames:
-      if filename.startswith(filename):
-        file_path = os.path.join(dir_path, file_name)
+      if filename.startswith(file_name):
+        file_path = os.path.join(dir_path, filename)
         other_epoch_state_dict =  torch.load(file_path)
         for key in state_dict:
           state_dict[key] += other_epoch_state_dict[key]
   
   lens = end_epoch - start_epoch + 1
   for key in state_dict:
-    state_dict[key] /= lens
+    state_dict[key] = state_dict[key] / float(lens)
   
   model.load_state_dict(state_dict)
   # validation
@@ -75,6 +76,8 @@ def weight_average(model, dir_path, start_epoch, end_epoch, dataloader_validatio
 
   with torch.no_grad():
     for (batch_waveforms, ground_truth_labels) in dataloader_validation:
+      batch_waveforms = batch_waveforms.float()
+      batch_waveforms = torch.squeeze(batch_waveforms)
       batch_waveforms = batch_waveforms.to(device)
       ground_truth_labels = ground_truth_labels.to(device)
       y_hat = model(batch_waveforms)
@@ -88,6 +91,49 @@ def weight_average(model, dir_path, start_epoch, end_epoch, dataloader_validatio
     print(f"WEIGHT AVERAGING | MAP : {mAP}")
   save_model("weight_averaging", mAP, best_mAP, model, dir_path)
 
+
+def weight_average_selected_states(model, state_filenames, root_path, dataloader_validation):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    state_path = os.path.join(root_path, state_filenames[0])
+    state_dict = torch.load(state_path)
+    count = 1
+    
+    for i in range(1, len(state_filenames)):
+        state_path = os.path.join(root_path, state_filenames[i])
+        other_state_dict =  torch.load(state_path)
+        for key in state_dict:
+            state_dict[key] = state_dict[key] + other_state_dict[key]
+        count += 1
+    
+    print(count)
+    for key in state_dict:
+        state_dict[key] = state_dict[key] / float(count)
+    
+    model.load_state_dict(state_dict)
+    model.to(device)
+    print("VALIDATION")
+    ground_truth_validation = []
+    prediction_validation = []
+    model.eval()
+
+    with torch.no_grad():
+      for (batch_waveforms, batch_labels) in dataloader_validation:
+                  # batch_waveforms = batch_waveforms.float()
+        batch_waveforms = torch.squeeze(batch_waveforms)
+        batch_waveforms = batch_waveforms.to(device)
+        y_hat = model(batch_waveforms)
+        y_hat = torch.clamp(y_hat, epsilon, 1)
+        prediction_validation.append(y_hat.cpu().detach())
+        ground_truth_validation.append(batch_labels.detach())
+
+      ground_truth_validation = torch.cat(ground_truth_validation).cpu()
+      prediction_validation = torch.cat(prediction_validation).cpu()
+      stats = get_stats(prediction_validation, ground_truth_validation)
+      mAP = stats["MAP"]
+      auc = stats["AUC"]
+      print(f"WEIGHT AVERAGING| MaP: {mAP} | AUC: {auc}")
+      save_model("weight_averaging", mAP, 0, model, root_path)
+        
 def train(model, teacher_model, dataloader_training, dataloader_validation, epoch_count, 
           learning_rate, learning_rate_decay, learning_rate_dacay_step, warmup_iterations, 
           teacher_inference_weight, teacher_inference_temperature, should_apply_weight_averaging, 
@@ -110,24 +156,28 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
         start_epoch = 0
 
         if teacher_model is not None:
+          print("Using KD")
           teacher_model = teacher_model.to(device)
           loss_fn = knowledge_distilation_loss_fn(teacher_inference_temperature, teacher_inference_weight, teacher_model)
         else:
+          print("Not using KD")
           loss_fn = cross_entropy_loss_fn()
           
         if (resume_training):
+          print("Resuming training")
           start_epoch = resume_epoch
           model.load_state_dict(torch.load(resume_training_weights_path))
             # map_location=torch.device('cpu'))
           
-          for epoch in range(resume_epoch): 
-            scheduler.step()
+          for epoch in range(resume_epoch):
+              scheduler.step()
           start_epoch = resume_epoch
 
         print ("Starting training")
         for epoch in range(start_epoch, epoch_count):
           print(f"EPOCH {epoch} started, current lr: {optimizer.param_groups[0]['lr']}")
           if stop_knowledge_distilation == epoch:
+            print("Stopping knowledge distilation")
             loss_fn = cross_entropy_loss_fn()
             teacher_model = None
 
@@ -139,7 +189,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
 
           for iteration, (batch_waveforms, batch_labels) in enumerate(dataloader_training):
             optimizer.zero_grad()
-            batch_waveforms = batch_waveforms.float()
+            # batch_waveforms = batch_waveforms.float()
             batch_waveforms = torch.squeeze(batch_waveforms)
             batch_waveforms = batch_waveforms.to(device)
             batch_labels = batch_labels.to(device)
@@ -155,9 +205,39 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             loss.backward()
             optimizer.step()
 
-            total_epoch_loss += loss.item()
-            if (iteration_count % 20 == 0):
+            # total_epoch_loss += loss.item()
+            if (iteration_count % 1000 == 0):
+              model.eval()
+              ground_truth_validation = []
+              prediction_validation = []
               print(f"Epoch {epoch}: iteration {iteration}, loss this batch: {loss}", flush=True)
+              with torch.no_grad():
+                print("VALIDATION")
+                for (batch_waveforms, batch_labels) in dataloader_validation:
+                  # batch_waveforms = batch_waveforms.float()
+                  batch_waveforms = torch.squeeze(batch_waveforms)
+                  batch_waveforms = batch_waveforms.to(device)
+                  y_hat = model(batch_waveforms)
+                  y_hat = torch.clamp(y_hat, epsilon, 1)
+                  prediction_validation.append(y_hat.cpu().detach())
+                  ground_truth_validation.append(batch_labels.detach())
+                  # break
+
+                ground_truth_validation = torch.cat(ground_truth_validation)
+                prediction_validation = torch.cat(prediction_validation)
+                stats = get_stats(prediction_validation, ground_truth_validation)
+              # print(stats["class_ap"])
+                map = stats["MAP"]
+                auc = stats["AUC"]
+                del ground_truth_validation
+                del prediction_validation
+                gc.collect()
+            
+                save_model(10000000 * epoch + iteration, map, best_mAP, model, dir_path_save_model_weights)
+                print(f"EPOCH: {epoch} | Iteration: {iteration}| MaP: {map} | AUC: {auc}")
+                best_mAP = max(map, best_mAP)
+                model.train()
+
             iteration_count += 1
             # break
 
@@ -183,12 +263,15 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             stats = get_stats(prediction_validation, ground_truth_validation)
             # print(stats["class_ap"])
             map = stats["MAP"]
+            auc = stats["AUC"]
+            
           scheduler.step()
           del ground_truth_validation
           del prediction_validation
+          gc.collect()
           save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)
           epoch_duration_minutes = (time.time() - epoch_start_time) / 60
-          print(f"EPOCH: {epoch} | MaP: {map} | EPOCH DURATION {epoch_duration_minutes}")
+          print(f"EPOCH: {epoch} | MaP: {map} | AUC: {auc}| EPOCH DURATION {epoch_duration_minutes}")
           best_mAP = max(map, best_mAP)
         
         if should_apply_weight_averaging:
@@ -210,8 +293,4 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           map = stats["MAP"]
           del ground_truth_validation
           del prediction_validation
-          save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)
-
-        
-
-        
+          save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)    
