@@ -7,15 +7,16 @@ import numpy as np
 
 sys.path.insert(0,'../../pytorch')
 from model import EfficientAudioNet
-from audioset_dataset import get_index_to_label
+from audioset_dataset import get_index_to_label, get_index_to_id
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, )
 
 model = EfficientAudioNet() 
 weights_path = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/model_weights/best_weights/model_params_90021158_0.41221821796293234.pth"
 index_to_label = get_index_to_label()
-wrapper = Wrapper(model, weights_path, index_to_label)
+index_to_id = get_index_to_id()
+wrapper = Wrapper(model, weights_path, index_to_label, index_to_id)
 
 @app.route("/")
 def hello_world():
@@ -48,5 +49,13 @@ def infer():
   # print(res)
   return res
 
+@app.after_request
+def after_request(response):
+    header = response.headers
+    header['Access-Control-Allow-Origin'] = '*'
+    header['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    header['Access-Control-Allow-Methods'] = 'OPTIONS, HEAD, GET, POST, DELETE, PUT'
+    return response
+    
 if __name__ == '__main__':
    app.run()
