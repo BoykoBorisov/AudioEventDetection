@@ -55,7 +55,7 @@
 
     python3 run_train.py
 
-### 2. Instruction for downloading audio files from the Audioset dataset
+### 2. Instructions for downloading audio files from the Audioset dataset
   2.1 Download and install youtube-dl and ffmpeg, instructions for that can be found at:
 
     http://ytdl-org.github.io/youtube-dl/download.html
