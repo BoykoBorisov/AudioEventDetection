@@ -1,3 +1,7 @@
+import argparse
+from ast import arg
+
+
 from audioset_dataset import get_id_to_index
 from utils import get_audiofile_name_from_audioset_csv_row
 import numpy as np
@@ -52,3 +56,11 @@ def get_sampler(dataset, weights_filepath):
         weights[dataset.file_id_to_idx[row[0]]] = float(row[1])
     # print(weights[0:100])
   return data.WeightedRandomSampler(weights=weights, num_samples=dataset.__len__())
+
+if __name__== '__main__':
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument("--csv_filepath", type=str, help="Audioset filepath")
+    parser.add_argument("--audiofiles_filepath", type=str, help="Path to the directory where the audiofiles are stored")
+    parser.add_argument("--output_filepath", type=str, help="Path to where the csv with the sampler weights will be stored")
+    args = parser.parse_args()
+    generate_weights(args.csv_filepath, args.audiofiles_filepath, args.output_filepath)

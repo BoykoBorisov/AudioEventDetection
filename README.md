@@ -19,10 +19,17 @@
 
   1.1 Ensure you have wav datasamples from Audioset and the Audioset csv (you can use deliverable 2 for that)
 
-  2.1 Enter pytorch folder:
+  1.2 Enter pytorch folder:
+
     cd pytorch
-  
-  2.2 Configure the exact training parameters in run_train.py, this includes specifying the following directory paths:
+
+  1.3 Generate the sampler weights by running:
+
+    python3 audioset_weight_generator --arguments
+
+    Run python3 audioset_weight_generator --help to see the arguments that need to be provided
+
+  1.3 Configure the exact training parameters in run_train.py, this includes specifying the following directory paths:
     
   * dir_path_save_model_weights - directory, where the model weights will be safed during training
   
@@ -36,9 +43,15 @@
 
   * csv_path_validation_samples - the Audioset dataset of the evaluation samples
 
-  2.3 (Optional) Set up teacher network if you are going to train using knowledge distilation:
+  This can be done by either passing these as arguments or by modifying the default values in run_train.
 
-  2.4 Adjust the rest of the hyperparamenters in run_train according to the experiment you would like to run and run:
+  1.4 (Optional) Set up teacher network if you are going to train using knowledge distilation:
+
+  This architecture is set up to run with the PaSST transformer as the teacher network. This can be done through:
+
+      pip install -e 'git+https://github.com/kkoutini/passt_hear21@0.0.8#egg=hear21passt' 
+
+  1.5 Adjust the rest of the hyperparamenters in run_train according to the experiment you would like to run and run:
 
     python3 run_train.py
 
@@ -73,7 +86,7 @@ The application for data visualisation is in the form of a server-client web app
         npm install
 
   3.3 Go to the server directory
-  
+
       cd ../backend
   
   3.4 In app.py, change the model weight path to the weights that will be loaded on the server to match the paths on your device
