@@ -2,7 +2,7 @@
 ## A third year project by Boyko Borisov
 
 ## This project contains three deliverables:
-1. A pipeline for defining and training an augmented version of EfficientNet for audio tagging for knowledge distilation
+1. A pipeline for defining and training an augmented version of EfficientNet for audio tagging with knowledge distilation
 2. A tool for downloading audio files from the Audioset dataset
 3. A GUI to visualise the probability distribution produced by the model on real time recordings 
 
