@@ -16,7 +16,7 @@ default_params = dict(
   hop_size = 160,
   mel_bins = 128,
   fmin = 50,
-  fmax = 8000,
+  fmax = 14000,
   num_classes=527
 )
 class EfficientAudioNet(nn.Module):
@@ -30,6 +30,14 @@ class EfficientAudioNet(nn.Module):
       self.fmin = default_params["fmin"]
       self.fmax = default_params["fmax"]
       self.num_classes = default_params["num_classes"]
+    else:
+      self.sample_rate = sound_params["sample_rate"]
+      self.window_size = sound_params["window_size"]
+      self.hop_size = sound_params["hop_size"]
+      self.mel_bins = sound_params["mel_bins"]
+      self.fmin = sound_params["fmin"]
+      self.fmax = sound_params["fmax"]
+      self.num_classes = sound_params["num_classes"]
       
     self.spectrogram_extractor = Spectrogram(n_fft=self.window_size, 
                                              hop_length=self.hop_size, 

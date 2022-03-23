@@ -44,11 +44,16 @@ def get_stats(y_hat, y):
     num_classes = y_hat.shape[1]  
     ap_per_class = np.zeros(num_classes)
     auc_per_class = np.zeros(num_classes)
+    threshold_per_class = np.zeros(num_classes)
     # print(y[:,0])
     for cls in range(num_classes):
         ap_per_class[cls] = metrics.average_precision_score(y[:,cls], y_hat[:,cls], average=None)
         auc_per_class[cls] = metrics.roc_auc_score(y[:, cls], y_hat[:, cls], average=None)
+        precision, recall, threshold =  metrics.precision_recall_curve(y[:cls], y_hat[:,])
+        fscore = (2 * precision * recall) / (precision + recall)
+        threshold_per_class[cls] = threshold[np.argmax(fscore)]
+
     mean_ap = np.mean(ap_per_class)
     mean_auc = np.mean(auc_per_class)
     d_prime = stats.norm().ppf(mean_auc) * np.sqrt(2.0)
-    return {"MAP": mean_ap, "AUC": mean_auc, "d-prime": d_prime, "class_ap": ap_per_class}
+    return {"MAP": mean_ap, "AUC": mean_auc, "d-prime": d_prime, "class_ap": ap_per_class, "thresholds": threshold_per_class}

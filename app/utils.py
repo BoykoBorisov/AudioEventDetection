@@ -1,33 +1,30 @@
 import csv
 import json
+import os
 from math import ceil, log, log10
+from re import I
 
 
 if __name__ == '__main__':
-  file_set = set()
-  classes = {}
-  with open("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/downloads.txt") as filenames:
-    for filename in filenames:
-      file_set.add(filename[:11])
+  id_to_label = {}
+  index_to_id = {}
+  with open(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "datasets/Audioset/class_labels_indices.csv"))) as file:
+    reader = csv.reader(file, delimiter=",")
+    rows = list(reader)
+    for i in range(1, len(rows)):
+      id_to_label[rows[i][1]] = rows[i][2]
+      index_to_id[rows[i][0]] = rows[i][1]
 
-  with open("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/datasets/Audioset/unbalanced_train_segments.csv") as dataset_csv:
+  classes = {}
+
+  with open("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/pytorch/temp.txt") as dataset_csv:
     reader = csv.reader(dataset_csv, delimiter= " ")
     for row in reader:
-        if row[0][:-1] in file_set:
-          sample_classes = row[3].split(",")
-          for sample_class in sample_classes:
-            if sample_class in classes:
-              classes[sample_class] += 1
-            else:
-              classes[sample_class] = 1 
-
-    # print(len(classes))
-  # for (k,v) in sorted(classes.items(), key=lambda item: item[1]):
-  #   print(f"{k} : {v}")
-  coeficients = {k: ceil(((log(v, 1500)) ** 4) / 3) for (k, v) in classes.items()}
+      classes[index_to_id[row[0]]] = row[1]
+ 
     # print(f"{k} :  {classes[k]}, {log(classes[k])}")
   f = open("coefs.json", "w")
-  json.dump(coeficients, fp=f, indent=2)
+  json.dump(classes, fp=f, indent=2)
   f.close()
 
   

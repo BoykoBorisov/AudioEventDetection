@@ -70,7 +70,7 @@ class AudiosetDataset(Dataset):
     waveform = waveform[None, :]
     # print(waveform.size)
     result = np.zeros((1, 160_000), dtype = np.float32)
-    result[0, 0:min(waveform.shape[1], 160000)] = waveform[:waveform.shape[0], :min(waveform.shape[1], 160_000)]
+    result[0, 0:min(waveform.shape[1], 160_000)] = waveform[:waveform.shape[0], :min(waveform.shape[1], 160_000)]
     waveform = result
     # print(result.shape)
     if (random.random() < self.mixup_rate):

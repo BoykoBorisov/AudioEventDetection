@@ -31,22 +31,15 @@ def infer():
   # (waveform1, _) = librosa.core.load("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output/---1_cCGK4M_0.000.wav", sr=None)
   # return {"aaa": 55}
   if "1" in request.files:
-    # print("Found 1.wav")
     # print(request.files["1"])
     request.files["1"].save("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/app/backend/1.wav")
-  # print(waveform1.shape)
-  (waveform2, _) = librosa.load("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/app/backend/1.wav", sr = 16_000)
-  print(waveform2.shape)
-  waveform2 = waveform2[None, :]
-  print(waveform2.shape)
-  # waveform2.shape
-  result = np.zeros((1, 160_000))
-  result[0, 0:min(waveform2.shape[1], 160000)] = waveform2[:waveform2.shape[0], :min(waveform2.shape[1], 160_000)]
-  print(result.shape)
-  waveform2 = result[0]
-  print(waveform2.shape)
-  res = wrapper.infer(waveform2)
-  # print(res)
+
+  (waveform, _) = librosa.core.load("1.wav", sr = None)
+  waveform = waveform[None, :]
+  result = np.zeros((1, 160_000), dtype=np.float32)
+  result[0, 0:min(waveform.shape[1], 160_000)] = waveform[:waveform.shape[0], :min(waveform.shape[1], 160_000)]
+  waveform = result
+  res = wrapper.infer(waveform)
   return res
 
 @app.after_request

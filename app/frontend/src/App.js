@@ -20,20 +20,15 @@ function App(props) {
 
   let parseResponse = (labelProbDict) => {
     return Object.entries(labelProbDict)
-      .reduce(((arr, [key, value]) => [{title: key, value: value["probabilities"], id: value["id"]}, ...arr]),[])
-      .filter(item => item["value"] > EPSILON);
+      .reduce(((arr, [key, value]) => [{title: key, value: value["probabilities"].toFixed(4), id: value["id"]}, ...arr]),[]);
   }
 
   let parseResponseAugmented = (labelProbDict) => {
-    console.log("augmenting response");
+    console.log("======== augmenting response ==========");
     return Object.entries(labelProbDict)
       .reduce(((arr, [key, value]) => [{title: key, value: value["probabilities"], id: value["id"]}, ...arr]),[])
-      // .filter(item => item["value"] > EPSILON)
-      .map(item => {
-        console.log(item);
-        item["value"] /= coefs[item["id"]];
-        return item;
-      });
+      .filter(entry => entry["value"] > coefs[entry["id"]]);
+   
   }
 
   let handleTest = () => {
@@ -52,6 +47,7 @@ function App(props) {
   }
 
   let prepareAndSendAudio = (data) => {
+    console.log(data);
     let fd = new FormData();
     fd.append("1", data.blob, "1.wav");
     inferPost(fd).then((response) => {
@@ -75,7 +71,7 @@ function App(props) {
   }
   return (
     <div className="App">
-      <AudioReactRecorder state={recordState} onStop={prepareAndSendAudio}/>
+      <AudioReactRecorder state={recordState} onStop={prepareAndSendAudio} canvasHeight={250} type="wav"/>
       <div>
         <div>Display event probabilities based on:</div>
         <div onChange={handleRadioBtn}>
@@ -90,7 +86,7 @@ function App(props) {
         </div>
       </div>
       <button onClick={changeState}>Start/Stop</button>
-      {data && <ChartRace data={data}/>}
+      {data && <ChartRace data={data} itemHeight={27} />}
     </div>
   );
 }
