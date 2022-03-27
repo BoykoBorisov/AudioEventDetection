@@ -63,4 +63,5 @@ if __name__== '__main__':
     parser.add_argument("--audiofiles_filepath", type=str, help="Path to the directory where the audiofiles are stored")
     parser.add_argument("--output_filepath", type=str, help="Path to where the csv with the sampler weights will be stored")
     args = parser.parse_args()
+    print(args)
     generate_weights(args.csv_filepath, args.audiofiles_filepath, args.output_filepath)

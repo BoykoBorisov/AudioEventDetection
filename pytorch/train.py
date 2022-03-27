@@ -206,7 +206,7 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
             optimizer.step()
 
             # total_epoch_loss += loss.item()
-            if (iteration_count % 1000 == 0):
+            if (iteration_count % 10000 == 0 and iteration_count != 0):
               model.eval()
               ground_truth_validation = []
               prediction_validation = []
@@ -293,4 +293,5 @@ def train(model, teacher_model, dataloader_training, dataloader_validation, epoc
           map = stats["MAP"]
           del ground_truth_validation
           del prediction_validation
+          gc.collect()
           save_model(epoch, map, best_mAP, model, dir_path_save_model_weights)    

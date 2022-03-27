@@ -5,8 +5,8 @@ from audioset_dataset import AudiosetDataset
 from torch.utils.data import DataLoader
 from audioset_weight_generator import get_sampler
 from model import EfficientAudioNet
-from hear21passt.hear21passt.base import load_model
-from panns_inference import AudioTagging, models
+# from hear21passt.hear21passt.base import load_model
+# from panns_inference import AudioTagging, models
 from train import train, weight_average_selected_states
 
 if __name__== '__main__':
@@ -16,8 +16,8 @@ if __name__== '__main__':
   parser.add_argument("--epoch_count", type=int, default=10, help="Number of epochs spent training")
   parser.add_argument("--learning_rate", type=float, default=0.0001, help="Learning rate")
   parser.add_argument("--learning_rate_decay", type=float, default=0.5, help="The number the learning rate will be multiplied by every x epochs")
-  parser.add_argument("--learning_rate_decay step", type=int, default=2, help="Number of epochs between the learning rate decays")
-  parser.add_argument("--batch_size", type=int, default=32)
+  parser.add_argument("--learning_rate_decay step", type=int, default=3, help="Number of epochs between the learning rate decays")
+  parser.add_argument("--batch_size", type=int, default=28)
   parser.add_argument("--warmup_iterations", type=int, default=1000, help="Number of iterations when warm up will be applied")
   
   parser.add_argument("--teacher_inference_weight", type=float, default=0.1, help="Teacher inference weight")
@@ -31,9 +31,9 @@ if __name__== '__main__':
   parser.add_argument("--weight_averaging_end", type=int, default= 0)
   
   parser.add_argument("--dir_path_save_model_weights", type=str, default=r"/home/jupyter/ThirdYearProject/model_weights")
-  parser.add_argument("--dir_path_sample_weights", type=str, default=r"/home/jupyter/ThirdYearProject/datasets/weights/weights_unbalanced.csv")
-  parser.add_argument("--dir_path_samples_training", type=str, default=r"/home/jupyter/ThirdYearProject/data-loader2/output")
-  parser.add_argument("--dir_path_sample_validation", type=str, default=r"/home/jupyter/ThirdYearProject/data-loader2/output_eval")
+  parser.add_argument("--dir_path_sample_weights", type=str, default=r"/home/jupyter/ThirdYearProject/weights.csv")
+  parser.add_argument("--dir_path_samples_training", type=str, default=r"/home/jupyter/ThirdYearProject/data_loader/output")
+  parser.add_argument("--dir_path_sample_validation", type=str, default=r"/home/jupyter/ThirdYearProject/data_loader/output_eval")
   parser.add_argument("--csv_path_training_samples", type=str, default=r"/home/jupyter/ThirdYearProject/datasets/Audioset/unbalanced_train_segments.csv")
   parser.add_argument("--csv_path_validation_samples", type=str, default=r"/home/jupyter/ThirdYearProject/datasets/Audioset/eval_segments.csv")
 
@@ -59,7 +59,7 @@ if __name__== '__main__':
   # hyperparameters for weight averaging 
   should_apply_weight_averaging = args.should_apply_weight_averaging
   weight_averaging_start_epoch = args.weight_averaging_start
-  weight_averaging_end_epoch = args.weight_averaging_stop
+  weight_averaging_end_epoch = args.weight_averaging_end
 
   num_classes = 527
   efficientnet_size = 2
@@ -91,18 +91,15 @@ if __name__== '__main__':
   model = EfficientAudioNet()
       
   #hear_passt_model
-  teacher_model = load_model()
-
-  for name, param in teacher_model.named_parameters():
-    param.requires_grad = False
+  teacher_model = None
 
 
-  # train(model=model, teacher_model=teacher_model, dataloader_training=dataloader_training,
-  #       dataloader_validation=dataloader_validation, epoch_count=epoch_count, learning_rate=learning_rate,
-  #       learning_rate_decay=learning_rate_decay, learning_rate_dacay_step=learning_rate_dacay_step, warmup_iterations=warmup_iterations,
-  #       teacher_inference_weight=teacher_inference_weight, teacher_inference_temperature=teacher_inference_temperature,
-  #       should_apply_weight_averaging=should_apply_weight_averaging, weight_averaging_start_epoch=weight_averaging_start_epoch, 
-  #       weight_averaging_end_epoch=weight_averaging_end_epoch, dir_path_save_model_weights=dir_path_save_model_weights, stop_knowledge_distilation = None,
-  #       resume_training=True, resume_training_weights_path = "/home/jupyter/ThirdYearProject/model_weights/model_params_70000579_0.38516599193804224.pth", 
-  #       resume_epoch = 7)
+  train(model=model, teacher_model=teacher_model, dataloader_training=dataloader_training,
+        dataloader_validation=dataloader_validation, epoch_count=epoch_count, learning_rate=learning_rate,
+        learning_rate_decay=learning_rate_decay, learning_rate_dacay_step=learning_rate_dacay_step, warmup_iterations=warmup_iterations,
+        teacher_inference_weight=teacher_inference_weight, teacher_inference_temperature=teacher_inference_temperature,
+        should_apply_weight_averaging=should_apply_weight_averaging, weight_averaging_start_epoch=weight_averaging_start_epoch, 
+        weight_averaging_end_epoch=weight_averaging_end_epoch, dir_path_save_model_weights=dir_path_save_model_weights, stop_knowledge_distilation = None,
+        resume_training=False, resume_training_weights_path = "/home/jupyter/ThirdYearProject/model_weights/model_params_70000579_0.38516599193804224.pth", 
+        resume_epoch = 7)
   
