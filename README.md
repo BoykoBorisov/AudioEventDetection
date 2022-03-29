@@ -1,4 +1,4 @@
-# Audio tagging using deep neural networks
+# Deep Learnig for Audio Event Detection
 ## A third year project by Boyko Borisov
 
 ## This project contains three deliverables:
