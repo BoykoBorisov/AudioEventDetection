@@ -16,14 +16,14 @@ if __name__== '__main__':
   parser.add_argument("--epoch_count", type=int, default=10, help="Number of epochs spent training")
   parser.add_argument("--learning_rate", type=float, default=0.0001, help="Learning rate")
   parser.add_argument("--learning_rate_decay", type=float, default=0.5, help="The number the learning rate will be multiplied by every x epochs")
-  parser.add_argument("--learning_rate_decay step", type=int, default=3, help="Number of epochs between the learning rate decays")
+  parser.add_argument("--learning_rate_decay_step", type=int, default=3, help="Number of epochs between the learning rate decays")
   parser.add_argument("--batch_size", type=int, default=28)
   parser.add_argument("--warmup_iterations", type=int, default=1000, help="Number of iterations when warm up will be applied")
   
   parser.add_argument("--teacher_inference_weight", type=float, default=0.1, help="Teacher inference weight")
   parser.add_argument("--teacher_inference_temperature", type=int, default=2, help="Teacher inference weight")
   
-  parser.add_argument("--mixup_rate", type=float, default=0.9, help="Mixup rate, what percentage of the samples will be a subject to mixup")
+  parser.add_argument("--mixup_rate", type=float, default=0.7, help="Mixup rate, what percentage of the samples will be a subject to mixup")
   parser.add_argument("--mixup_weight", type=float, default=0.5, help="How much should the mixup affect the sample?")
 
   parser.add_argument("--should_apply_weight_averaging", type=bool, default=False)
@@ -44,7 +44,7 @@ if __name__== '__main__':
   epoch_count = args.epoch_count
   learning_rate = args.learning_rate
   learning_rate_decay = args.learning_rate_decay
-  learning_rate_dacay_step = args.learning_rate_decay
+  learning_rate_dacay_step = args.learning_rate_decay_step
   batch_size = args.batch_size
   warmup_iterations = args.warmup_iterations
 
@@ -100,6 +100,6 @@ if __name__== '__main__':
         teacher_inference_weight=teacher_inference_weight, teacher_inference_temperature=teacher_inference_temperature,
         should_apply_weight_averaging=should_apply_weight_averaging, weight_averaging_start_epoch=weight_averaging_start_epoch, 
         weight_averaging_end_epoch=weight_averaging_end_epoch, dir_path_save_model_weights=dir_path_save_model_weights, stop_knowledge_distilation = None,
-        resume_training=False, resume_training_weights_path = "/home/jupyter/ThirdYearProject/model_weights/model_params_70000579_0.38516599193804224.pth", 
-        resume_epoch = 7)
+        resume_training=True, resume_training_weights_path = "ThirdYearProject/model_weights/best_map_model_params_5.pth", 
+        resume_epoch = 6)
   
