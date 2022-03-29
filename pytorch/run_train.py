@@ -92,7 +92,7 @@ if __name__== '__main__':
       
   #hear_passt_model
   teacher_model = None
-
+  # teacher_model = load_model()
 
   train(model=model, teacher_model=teacher_model, dataloader_training=dataloader_training,
         dataloader_validation=dataloader_validation, epoch_count=epoch_count, learning_rate=learning_rate,
