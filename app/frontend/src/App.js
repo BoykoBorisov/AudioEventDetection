@@ -11,7 +11,6 @@ import { EPSILON } from './config';
 function App(props) {
 
   // console.log(coefs);
-  const [test, setTest] = useState("Unset");
   const [data, setData] = useState();
   const [recordState, setRecordState] = useState(RecordState.STOP);
   const [displayType , setDisplayType] = useState("real");
@@ -24,18 +23,10 @@ function App(props) {
   }
 
   let parseResponseAugmented = (labelProbDict) => {
-    console.log("======== augmenting response ==========");
     return Object.entries(labelProbDict)
       .reduce(((arr, [key, value]) => [{title: key, value: value["probabilities"], id: value["id"]}, ...arr]),[])
       .filter(entry => entry["value"] > coefs[entry["id"]]);
    
-  }
-
-  let handleTest = () => {
-    setTest("Waiting for test response");
-    inferPost((response) => {   
-      setData(response);
-    })
   }
 
   let updateChart = (response) => {
@@ -78,11 +69,11 @@ function App(props) {
           <input type="radio" 
                  value="real" 
                  name="display_type" 
-                 checked={displayType === "real"} /> Real values
+                 checked={displayType === "real"} /> All values
           <input type="radio" 
                  value="augmented" 
                  name="display_type"
-                 checked={displayType === "augmented"} /> Augmented values
+                 checked={displayType === "augmented"} /> Values above threshold
         </div>
       </div>
       <button onClick={changeState}>Start/Stop</button>

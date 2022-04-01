@@ -8,12 +8,14 @@ import numpy as np
 sys.path.insert(0,'../../pytorch')
 from model import EfficientAudioNet
 from audioset_dataset import get_index_to_label, get_index_to_id
+import os
 
 app = Flask(__name__)
 CORS(app, )
 
 model = EfficientAudioNet() 
-weights_path = r"/Users/boykoborisov/Desktop/Uni/ThirdYearProject/model_weights/best_weights/model_params_90021158_0.41221821796293234.pth"
+
+weights_path = os.path.realpath(__file__)[:-6] + "../../model_weights/best_weights/best_weight_with_KD_no_WA.pth"
 index_to_label = get_index_to_label()
 index_to_id = get_index_to_id()
 wrapper = Wrapper(model, weights_path, index_to_label, index_to_id)
@@ -28,11 +30,8 @@ def test():
 
 @app.route("/infer", methods=["POST"])
 def infer():
-  # (waveform1, _) = librosa.core.load("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/data-loader2/output/---1_cCGK4M_0.000.wav", sr=None)
-  # return {"aaa": 55}
   if "1" in request.files:
-    # print(request.files["1"])
-    request.files["1"].save("/Users/boykoborisov/Desktop/Uni/ThirdYearProject/app/backend/1.wav")
+    request.files["1"].save("1.wav")
 
   (waveform, _) = librosa.core.load("1.wav", sr = None)
   waveform = waveform[None, :]

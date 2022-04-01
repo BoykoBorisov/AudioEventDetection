@@ -14,7 +14,6 @@ class Wrapper:
   def infer(self, waveform):
     waveform = torch.tensor(waveform)
     # waveform = torch.unsqueeze(waveform, 0)
-    print(waveform.shape)
     inferences = self.model(waveform)
     inferences = inferences.detach().numpy()
     response = {}
