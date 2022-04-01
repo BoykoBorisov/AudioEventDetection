@@ -24,14 +24,14 @@ if __name__== '__main__':
   parser.add_argument("--teacher_inference_temperature", type=int, default=2, help="Teacher inference weight")
   
   parser.add_argument("--mixup_rate", type=float, default=0.7, help="Mixup rate, what percentage of the samples will be a subject to mixup")
-  parser.add_argument("--mixup_weight", type=float, default=0.5, help="How much should the mixup affect the sample?")
+  parser.add_argument("--mixup_weight", type=float, default=5, help="How much should the mixup affect the sample?")
 
   parser.add_argument("--should_apply_weight_averaging", type=bool, default=False)
   parser.add_argument("--weight_averaging_start", type=int, default= 0)
   parser.add_argument("--weight_averaging_end", type=int, default= 0)
   
   parser.add_argument("--dir_path_save_model_weights", type=str, default=r"/home/jupyter/ThirdYearProject/model_weights")
-  parser.add_argument("--dir_path_sample_weights", type=str, default=r"/home/jupyter/ThirdYearProject/weights.csv")
+  parser.add_argument("--dir_path_sample_weights", type=str, default=r"/home/jupytexr/ThirdYearProject/weights.csv")
   parser.add_argument("--dir_path_samples_training", type=str, default=r"/home/jupyter/ThirdYearProject/data_loader/output")
   parser.add_argument("--dir_path_sample_validation", type=str, default=r"/home/jupyter/ThirdYearProject/data_loader/output_eval")
   parser.add_argument("--csv_path_training_samples", type=str, default=r"/home/jupyter/ThirdYearProject/datasets/Audioset/unbalanced_train_segments.csv")
@@ -93,13 +93,15 @@ if __name__== '__main__':
   #hear_passt_model
   teacher_model = None
   # teacher_model = load_model()
-
+  # teacher_model.eval()
+  # for name, param in teacher_model.named_parameters():
+    # param.requires_grad = False
   train(model=model, teacher_model=teacher_model, dataloader_training=dataloader_training,
         dataloader_validation=dataloader_validation, epoch_count=epoch_count, learning_rate=learning_rate,
         learning_rate_decay=learning_rate_decay, learning_rate_dacay_step=learning_rate_dacay_step, warmup_iterations=warmup_iterations,
         teacher_inference_weight=teacher_inference_weight, teacher_inference_temperature=teacher_inference_temperature,
         should_apply_weight_averaging=should_apply_weight_averaging, weight_averaging_start_epoch=weight_averaging_start_epoch, 
         weight_averaging_end_epoch=weight_averaging_end_epoch, dir_path_save_model_weights=dir_path_save_model_weights, stop_knowledge_distilation = None,
-        resume_training=True, resume_training_weights_path = "ThirdYearProject/model_weights/best_map_model_params_5.pth", 
+        resume_training=False, resume_training_weights_path = "ThirdYearProject/model_weights/best_map_model_params_5.pth", 
         resume_epoch = 6)
   

@@ -109,6 +109,7 @@ The code for this project was written from scratch. It has been, however, guided
  * Aakash N S' PyTorch tutorials series - https://jovian.ai/aakashns/collections/deep-learning-with-pytorch
  * Chathuranga Siriwardhana's tutorial for using librosa - https://towardsdatascience.com/sound-event-classification-using-machine-learning-8768092beafc
  * Quinquang Kong's repository for PANNs for integrating mix-up - https://github.com/qiuqiangkong/audioset_classification
+ * Yuan Gong's AST repository - https://github.com/YuanGongND/ast
  * Flask's documentation and tutorial for building http-servers - https://flask.palletsprojects.com/en/2.0.x/tutorial/
  * Aoife McDonagh's repositories related to acoustic scene recognition - https://github.com/aoifemcdonagh
  * Alexander Staisiuk's tutorial on weight averaging - https://stasiuk.medium.com/pytorch-weights-averaging-e2c0fa611a0c
